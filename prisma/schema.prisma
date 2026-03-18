@@ -17,9 +17,11 @@ model Organization {
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-    customers    Customer[]
-    vendors      Vendor[]
-  }
+  customers        Customer[]
+  vendors          Vendor[]
+  salesInvoices    SalesInvoice[]
+  purchaseInvoices PurchaseInvoice[]
+}
 
   model Customer {
   id                      String   @id @default(uuid())
@@ -73,6 +75,7 @@ model Organization {
   @@index([company_id])
   @@index([customer_id])
   @@index([email])
+  salesInvoices           SalesInvoice[]
 }
 
 model Vendor {
@@ -127,6 +130,109 @@ model Vendor {
   @@unique([company_id, vendor_id])
   @@index([company_id])
   @@index([company_id, email])
+  purchaseInvoices        PurchaseInvoice[]
+}
+
+model SalesInvoice {
+  id                  String              @id @default(uuid())
+  invoice_no          String
+  invoice_date        DateTime
+  customer_id_ref     String              // Reference to Customer.customer_id
+  customer            Customer            @relation(fields: [customer_id_ref], references: [customer_id])
+  payment_terms_days  Int?
+  due_date            DateTime?
+  total_amount        Decimal             @db.Decimal(18, 2)
+  paid_amount         Decimal             @default(0) @db.Decimal(18, 2)
+  status              SalesInvoiceStatus  @default(Pending)
+  place_of_supply     String?
+  company_id          String
+  organization        Organization        @relation(fields: [company_id], references: [id])
+  items               SalesInvoiceItem[]
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
+
+  @@unique([company_id, invoice_no])
+  @@index([company_id])
+  @@index([customer_id_ref])
+  @@index([invoice_no])
+}
+
+model SalesInvoiceItem {
+  id          String       @id @default(uuid())
+  invoice_id  String
+  invoice     SalesInvoice @relation(fields: [invoice_id], references: [id])
+  item_id     String?
+  item_name   String
+  quantity    Decimal      @db.Decimal(18, 2)
+  unit        String?
+  unit_price  Decimal      @db.Decimal(18, 2)
+  gst_rate    Decimal      @default(0) @db.Decimal(5, 2)
+  cgst        Decimal      @default(0) @db.Decimal(18, 2)
+  sgst        Decimal      @default(0) @db.Decimal(18, 2)
+  igst        Decimal      @default(0) @db.Decimal(18, 2)
+  total       Decimal      @db.Decimal(18, 2)
+
+  @@index([invoice_id])
+}
+
+model PurchaseInvoice {
+  id                    String                @id @default(uuid())
+  invoice_no            String
+  invoice_date          DateTime
+  vendor_id             String                // Foreign key referencing Vendor.id (UUID)
+  vendor                Vendor                @relation(fields: [vendor_id], references: [id])
+  payment_terms_days    Int?
+  due_date              DateTime?
+  total_amount          Decimal               @db.Decimal(18, 2)
+  paid_amount           Decimal               @default(0) @db.Decimal(18, 2)
+  tds_deducted          Decimal               @default(0) @db.Decimal(18, 2)
+  grn_number            String?
+  po_number             String?
+  company_id            String
+  organization          Organization          @relation(fields: [company_id], references: [id])
+  status                PurchaseInvoiceStatus @default(Pending)
+  remarks               String?
+  items                 PurchaseInvoiceItem[]
+  created_at            DateTime              @default(now())
+  updated_at            DateTime              @updatedAt
+
+  @@unique([company_id, invoice_no])
+  @@index([company_id])
+  @@index([vendor_id])
+  @@index([invoice_no])
+}
+
+model PurchaseInvoiceItem {
+  id          String          @id @default(uuid())
+  invoice_id  String
+  invoice     PurchaseInvoice @relation(fields: [invoice_id], references: [id])
+  item_name   String
+  quantity    Decimal         @db.Decimal(18, 2)
+  unit        String?
+  unit_price  Decimal         @db.Decimal(18, 2)
+  gst_rate    Decimal         @default(0) @db.Decimal(5, 2)
+  cgst        Decimal         @default(0) @db.Decimal(18, 2)
+  sgst        Decimal         @default(0) @db.Decimal(18, 2)
+  igst        Decimal         @default(0) @db.Decimal(18, 2)
+  total       Decimal         @db.Decimal(18, 2)
+
+  @@index([invoice_id])
+}
+
+enum PurchaseInvoiceStatus {
+  Pending
+  Paid
+  PartiallyPaid
+  Overdue
+  Cancelled
+}
+
+enum SalesInvoiceStatus {
+  Pending
+  Paid
+  PartiallyPaid
+  Overdue
+  Cancelled
 }
 
 enum CustomerStatus {

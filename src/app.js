@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import organizationRoutes from './routes/organizationRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 import prisma from './config/prisma.js';
 import errorHandler from './middleware/errorHandler.js';
 
@@ -11,6 +12,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Health Check
 app.get('/health', async (req, res) => {
