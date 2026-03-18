@@ -17,4 +17,133 @@ model Organization {
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+    customers    Customer[]
+    vendors      Vendor[]
+  }
+
+  model Customer {
+  id                      String   @id @default(uuid())
+  customer_id             String   @unique
+  company_name            String
+  contact_person          String
+  designation             String
+  email                   String
+  mobile                  String
+  alternate_phone         String?
+  billing_address_line1   String
+  billing_address_line2   String?
+  city                    String
+  state                   String
+  pincode                 String
+  country                 String
+  gstin                   String?
+  pan_number              String?
+  gst_type                String?
+  place_of_supply         String?
+  industry                String?
+  credit_limit            Decimal? @db.Decimal(18, 2)
+  payment_terms_days      Int?
+  preferred_payment_method String?
+  bank_name               String?
+  bank_account_no         String?
+  bank_ifsc               String?
+  bank_branch            String?
+  currency                String   @default("INR")
+  tds_applicable          Boolean  @default(false)
+  tds_rate_pct            Decimal? @db.Decimal(5, 2)
+  customer_since          DateTime?
+  account_manager         String?
+  credit_rating           String?
+  status                  CustomerStatus @default(Active)
+  remarks                 String?
+  outstanding_balance     Decimal  @default(0) @db.Decimal(18, 2)
+  credit_utilisation_pct  Decimal  @default(0) @db.Decimal(5, 2)
+  avg_payment_days        Int      @default(0)
+  last_payment_date       DateTime?
+  total_invoices          Int      @default(0)
+  overdue_invoices_count  Int      @default(0)
+  payment_behavior_tag    String?
+  ai_risk_score           Decimal  @default(0) @db.Decimal(5, 2)
+  company_id              String
+  organization            Organization @relation(fields: [company_id], references: [id])
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+  created_by              String   @default("system")
+
+  @@index([company_id])
+  @@index([customer_id])
+  @@index([email])
+}
+
+model Vendor {
+  id                        String   @id @default(uuid())
+  vendor_id                 String   @unique
+  company_name              String
+  contact_person            String
+  designation               String
+  email                     String
+  mobile                    String
+  alternate_phone           String?
+  billing_address_line1     String
+  billing_address_line2     String?
+  city                      String
+  state                     String
+  pincode                   String
+  country                   String
+  gstin                     String?
+  pan_number                String?
+  gst_type                  String?
+  vendor_category           VendorCategory?
+  payment_terms_days        Int?
+  preferred_payment_method   String?
+  bank_name                 String?
+  bank_account_no         String?
+  bank_ifsc                 String?
+  bank_branch               String?
+  currency                  String   @default("INR")
+  tds_applicable            Boolean  @default(false)
+  tds_rate_pct              Decimal? @db.Decimal(5, 2)
+  msme_registered           Boolean  @default(false)
+  msme_number               String?
+  vendor_since              DateTime?
+  vendor_credit_limit       Decimal? @db.Decimal(18, 2)
+  rating                    String?
+  lead_time_days            Int?
+  status                    VendorStatus @default(Active)
+  remarks                   String?
+  outstanding_payable       Decimal  @default(0) @db.Decimal(18, 2)
+  avg_payment_days          Int      @default(0)
+  total_bills               Int      @default(0)
+  overdue_bills_count       Int      @default(0)
+  last_payment_date         DateTime?
+  last_transaction_date     DateTime?
+  payment_behavior_tag      String?
+  company_id                String
+  organization              Organization @relation(fields: [company_id], references: [id])
+  created_at                DateTime @default(now())
+  updated_at                DateTime @updatedAt
+  created_by                String   @default("system")
+
+  @@unique([company_id, vendor_id])
+  @@index([company_id])
+  @@index([company_id, email])
+}
+
+enum CustomerStatus {
+  Active
+  Inactive
+}
+
+enum VendorStatus {
+  Active
+  Inactive
+  OnHold
+  Blacklisted
+}
+
+enum VendorCategory {
+  RawMaterial
+  Consumables
+  Services
+  CapitalGoods
 }
