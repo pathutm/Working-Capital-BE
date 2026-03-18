@@ -21,6 +21,8 @@ model Organization {
   vendors          Vendor[]
   salesInvoices    SalesInvoice[]
   purchaseInvoices PurchaseInvoice[]
+  accounts         Account[]
+  transactions     Transaction[]
 }
 
   model Customer {
@@ -252,4 +254,71 @@ enum VendorCategory {
   Consumables
   Services
   CapitalGoods
+}
+
+model Account {
+  id           String   @id @default(uuid())
+  name         String
+  type         AccountType
+  company_id   String
+  organization Organization @relation(fields: [company_id], references: [id])
+
+  transactions Transaction[]
+
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@unique([company_id, name])
+  @@index([company_id])
+}
+
+enum AccountType {
+  BANK
+  CASH
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+
+  account_id      String
+  account         Account  @relation(fields: [account_id], references: [id])
+
+  company_id      String
+  organization    Organization @relation(fields: [company_id], references: [id])
+
+  type            TransactionType
+  amount          Decimal  @db.Decimal(18,2)
+
+  status          TransactionStatus @default(COMPLETED)
+
+  reference_type  ReferenceType?   // SALES_INVOICE / PURCHASE_INVOICE
+  reference_id    String?
+
+  description     String?
+
+  date            DateTime
+
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@index([account_id])
+  @@index([company_id])
+  @@index([reference_type, reference_id])
+}
+
+enum ReferenceType {
+  SALES_INVOICE
+  PURCHASE_INVOICE
+}
+
+enum TransactionType {
+  INFLOW
+  OUTFLOW
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
 }
