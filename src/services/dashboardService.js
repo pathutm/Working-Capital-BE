@@ -51,14 +51,14 @@ export const getWorkingCapitalMetrics = async (company_id) => {
     where: { company_id, type: 'OUTFLOW', status: 'COMPLETED' }
   });
 
-  const totalReceivablesValue = Number(receivablesAggregation._sum.total_amount || 0) - 
-                            Number(receivablesAggregation._sum.paid_amount || 0);
-                            
-  const totalPayablesValue = Number(payablesAggregation._sum.total_amount || 0) - 
-                          Number(payablesAggregation._sum.paid_amount || 0);
+  const totalReceivablesValue = Number(receivablesAggregation._sum.total_amount || 0) -
+    Number(receivablesAggregation._sum.paid_amount || 0);
 
-  const cashBalance = Number(inflowAggregation._sum.amount || 0) - 
-                     Number(outflowAggregation._sum.amount || 0);
+  const totalPayablesValue = Number(payablesAggregation._sum.total_amount || 0) -
+    Number(payablesAggregation._sum.paid_amount || 0);
+
+  const cashBalance = Number(inflowAggregation._sum.amount || 0) -
+    Number(outflowAggregation._sum.amount || 0);
 
   // Fetch 5 most recent transactions
   const recentTransactions = await prisma.transaction.findMany({
@@ -139,11 +139,11 @@ export const getWorkingCapitalMetrics = async (company_id) => {
   salesInvoices.forEach(inv => {
     const date = new Date(inv.invoice_date);
     const key = `${date.getFullYear()}-${date.getMonth()}`;
-    const entry = monthlyInvoiceDataMap.get(key) || { 
-      name: `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`, 
-      sales: 0, 
-      purchases: 0, 
-      sortDate: new Date(date.getFullYear(), date.getMonth(), 1) 
+    const entry = monthlyInvoiceDataMap.get(key) || {
+      name: `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`,
+      sales: 0,
+      purchases: 0,
+      sortDate: new Date(date.getFullYear(), date.getMonth(), 1)
     };
     entry.sales += parseFloat(inv.total_amount.toString());
     monthlyInvoiceDataMap.set(key, entry);
@@ -152,11 +152,11 @@ export const getWorkingCapitalMetrics = async (company_id) => {
   purchaseInvoices.forEach(inv => {
     const date = new Date(inv.invoice_date);
     const key = `${date.getFullYear()}-${date.getMonth()}`;
-    const entry = monthlyInvoiceDataMap.get(key) || { 
-      name: `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`, 
-      sales: 0, 
-      purchases: 0, 
-      sortDate: new Date(date.getFullYear(), date.getMonth(), 1) 
+    const entry = monthlyInvoiceDataMap.get(key) || {
+      name: `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`,
+      sales: 0,
+      purchases: 0,
+      sortDate: new Date(date.getFullYear(), date.getMonth(), 1)
     };
     entry.purchases += parseFloat(inv.total_amount.toString());
     monthlyInvoiceDataMap.set(key, entry);
@@ -203,12 +203,12 @@ export const getReceivables = async (company_id) => {
     where: { company_id, status: { not: 'Cancelled' } },
     include: {
       customer: {
-        select: { 
-          company_name: true, 
-          customer_id: true, 
-          billing_address_line1: true, 
-          city: true, 
-          state: true, 
+        select: {
+          company_name: true,
+          customer_id: true,
+          billing_address_line1: true,
+          city: true,
+          state: true,
           email: true,
           bank_name: true,
           bank_account_no: true,
@@ -228,12 +228,12 @@ export const getPayables = async (company_id) => {
     where: { company_id, status: { not: 'Cancelled' } },
     include: {
       vendor: {
-        select: { 
-          company_name: true, 
-          vendor_id: true, 
-          billing_address_line1: true, 
-          city: true, 
-          state: true, 
+        select: {
+          company_name: true,
+          vendor_id: true,
+          billing_address_line1: true,
+          city: true,
+          state: true,
           email: true,
           bank_name: true,
           bank_account_no: true,
@@ -251,34 +251,34 @@ export const getPayables = async (company_id) => {
 export const getAllInvoices = async (company_id) => {
   const sales = await prisma.salesInvoice.findMany({
     where: { company_id },
-    include: { 
-      customer: { 
-        select: { 
+    include: {
+      customer: {
+        select: {
           company_name: true,
           bank_name: true,
           bank_account_no: true,
           bank_ifsc: true,
           bank_branch: true
-        } 
-      }, 
-      items: true 
+        }
+      },
+      items: true
     },
     orderBy: { invoice_date: 'desc' }
   });
 
   const purchases = await prisma.purchaseInvoice.findMany({
     where: { company_id },
-    include: { 
-      vendor: { 
-        select: { 
+    include: {
+      vendor: {
+        select: {
           company_name: true,
           bank_name: true,
           bank_account_no: true,
           bank_ifsc: true,
           bank_branch: true
-        } 
-      }, 
-      items: true 
+        }
+      },
+      items: true
     },
     orderBy: { invoice_date: 'desc' }
   });
